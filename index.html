@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="Template.js" type="text/javascript"></script>
+</head>
+<body>
+<style type="text/css" media="screen">
+/*	img{
+		display: none;
+	}*/
+
+/*	.query-params::last-child dd img{
+		display: inline !important;
+	}*/
+</style>
+<div class="result">
+	
+</div>
+	<form method="get" accept-charset="utf-8">
+		<input type="text" name="url" value="" placeholder="" />
+		<input type="text" name="user" value="" placeholder="userid" />
+		<input type="text" name="game" value="" placeholder="gameid" />				
+		<div class="query-params">
+	
+		</div>
+		<input class="submit" type="submit" name="submit" value="submit">
+	</form>
+
+	<script>
+	(function(pvPage){
+	var PARENT = ".query-params",
+	CHILD = "query-param",
+	queryTemplate = new pvPage.Template({
+		parent : PARENT,
+		child : CHILD
+	});
+	
+	queryTemplate.setTags([
+		"<dl class='{0} active'>",
+		"<dt>param: </dt>",
+		"<dd class='key-pair'>",
+		"<input type='text' class='key {1}-key' name='param-key-{1}' value='{2}' placeholder='{2}' />",
+		"<input type='text' class='value {1}-value' name='param-value-{1}' value='{2}' placeholder='{2}' />",
+		"</dd>",
+		"</dl>"
+		]);
+
+	var addButton = new pvPage.Control({
+		src: "http://uxrepo.com/static/icon-sets/iconic/svg/plus.svg",
+		height: 15,
+		width: 15,
+		class: "active-control",
+		elementClass : CHILD,
+		enact : function(e){
+			var i = queryTemplate.config.index;
+			var className = queryTemplate.config.child;
+			
+			pvPage('dl').removeClass('active');
+			pvPage('.result').text(buildUrl());			
+			RenderElement([className,i,"merkin"]);		
+		} 
+	})
+	var deleteButton = new pvPage.Control({
+		src: "http://uxrepo.com/static/icon-sets/iconic/svg/minus.svg",
+		height: 15,
+		width: 15,
+		class: "active-control",
+		elementClass : CHILD,
+		enact : function(e){
+			queryTemplate.removeLastChild(this, null, function(){
+				pvPage('.result').text(buildUrl());	
+				addButton.add();
+				deleteButton.add();								
+			});
+			//deleteButton.remove();
+
+		} 
+	})
+
+	// var userMacro = pvPage.createMacro("PVUSER", function(){
+	// 	console.log("PVUSER",pvPage("input[name='user']").val());
+	// 	return  pvPage("input[name='user']").val();
+	// });
+	var macros = [
+	new pvPage.Macro("PVUSER", function(){
+		return  pvPage("input[name='user']").val();
+	}),
+	new pvPage.Macro("PVGAME", function(){
+		return "poopydick";
+	})
+	];
+
+	pvPage('input[name="url"]').on('keyup', function(e){
+		pvPage('.result').text(pvPage(this).val());			
+	})
+	pvPage('form input').on('keyup', function(e){
+		pvPage('.result').text(buildUrl());			
+	})	
+	
+	pvPage("form").on("submit", function(e){
+		e.preventDefault();
+		pvPage('.result').text(buildUrl());
+	})
+
+	pvPage(document).ready(function(){
+		var i = queryTemplate.config.index;
+		RenderElement([i,i,i]);
+		
+	});		
+
+	function RenderElement(formatArray){
+
+		function BeforeElementCompile(x){
+			x = String.prototype.format.apply(x, formatArray);
+			return x;
+		}
+		function AfterDOMInsert(){
+			pvPage(PARENT)
+			.find('.active-control')
+			.removeClass('.active-control');
+
+			pvPage(PARENT).find('.active-control').remove();
+			addButton.add();
+			deleteButton.add();
+		}		
+		queryTemplate.appendNew(this, BeforeElementCompile, AfterDOMInsert);
+	}
+
+	function buildUrl(){
+		var url = $('input[name="url"]').val();
+		// url = applyMacro(url, userMacro);
+		// url = applyMacro(url, gameMacro);
+
+		var inputs = pvPage('form input');
+		var queryString = "?";
+		inputs.each(function(idx, el){
+			var thisInput = pvPage(el)
+			if(thisInput.hasClass('key') || thisInput.hasClass('value')){
+				var inputString = thisInput.val();
+				// inputString = uMacro.run(inputString);				
+				macros.forEach(function(x){
+					if(x.check(inputString) == true){
+						inputString = x.run(inputString);
+					}
+				});
+				// inputString = gameMacro.run(inputString);
+				// console.log(inputString);
+
+				var seperator  = (thisInput.hasClass('key')) ? '=' : '&';
+				var charPair = inputString + seperator;
+				queryString += charPair;
+			}			
+		})
+		// pvPage('.result').text(url + queryString)
+		return url + queryString;
+	}
+
+
+	})(Merkin)
+	</script>
+
+</body>
+</html>
