@@ -30,7 +30,7 @@ if (!String.prototype.format) {
          res[i] = fun.call(thisp, thisp[i], i, thisp);
       }
       return res;
-   }
+   };
 
 	Merkin.prototype.extend = function(){
 	    for(var i=1; i<arguments.length; i++)
@@ -38,14 +38,14 @@ if (!String.prototype.format) {
 	            if(arguments[i].hasOwnProperty(key))
 	                arguments[0][key] = arguments[i][key];
 	    return arguments[0];
-	}
+	};
 
 	Merkin.prototype.actionFilter = function(context, callback){
 
 		if(context && (callback && typeof callback === 'function')){
 			return callback.apply(context, arguments);			
 		}
-	}
+	};
 
 	Merkin.prototype.createMacro = function(macro, thing){
 		if(!macro) throw new TypeError();
@@ -54,18 +54,19 @@ if (!String.prototype.format) {
 		return function(m){
 			if(m === macro && typeof thing === 'function') return thing();			
 			if(m === macro) return thing;
-		}
-	}	
+		};
+	};
 
 	function Macro(macro, thing){
 		if(!macro) throw new TypeError("you need to defined a macro");
 		this.macro = macro;
-		this.thing = thing		
+		this.thing = thing;
 	}
+
 	Macro.prototype.get = function(m){
 			if(m === this.macro && typeof this.thing === 'function') return this.thing();			
 			if(m === this.macro) return this.thing;
-	}
+	};
 
 	Macro.prototype.check = function(stringToFilter){
 		var match = stringToFilter.match(/{{\s*[\w\.]+\s*}}/g);
@@ -81,7 +82,7 @@ if (!String.prototype.format) {
 			} 
 		}
 		return false;
-	}		
+	};	
 	Macro.prototype.run = function(stringToFilter){
 		var match = stringToFilter.match(/{{\s*[\w\.]+\s*}}/g);
 		if(match !== null ){
@@ -93,7 +94,7 @@ if (!String.prototype.format) {
 			stringToFilter = stringToFilter.replace(/{{\s*[\w\.]+\s*}}/g, this.get(m));						
 		}
 		return stringToFilter;		
-	}
+	};
 
 	function Ensure(){}
 	Ensure.prototype.isClass = function(string) {
@@ -107,8 +108,6 @@ if (!String.prototype.format) {
 		this.config = (options) ? options : {};
 		this.config.index = 0;
 		Merkin.extend(this, options);					
-		// console.log(this);
-
 	}
 
 	Template.prototype = {
@@ -117,13 +116,13 @@ if (!String.prototype.format) {
 			html: "",
 			index: 0
 		}
-	}
+	};
 
 	Template.prototype.setTags = function(tags, filters) {
 		var newT = Merkin.map(function(el, idx){
 			el.format.apply(el, filters);
 			return el;
-		}, tags)
+		}, tags);
 		// console.log(newT);
 		this.config.tags = newT;
 
@@ -131,14 +130,14 @@ if (!String.prototype.format) {
 	};
 
 	Template.prototype.appendNew = function(context, before, after) {
-		var context = (context) ? Merkin.extend({}, context, this.config) : {};
+		context = (context) ? Merkin.extend({}, context, this.config) : {};
 
 		if(before && typeof before === 'function'){
 			//console.log(context);
 			this.config.html = this.applyTagFilters(context, before);			
 		}
 		Merkin('dl').each(function(x){
-			$(x).removeClass('active')
+			$(x).removeClass('active');
 		});
 		Merkin(this.config.parent).append(this.config.html);
 
@@ -152,7 +151,7 @@ if (!String.prototype.format) {
 	
 	};
 	Template.prototype.removeLastChild = function(context, before, after) {
-		var context = (context) ? Merkin.extend({}, context, this.config) : {};
+		context = (context) ? Merkin.extend({}, context, this.config) : {};
 
 		if(before && typeof before === 'function'){
 			//console.log(context);
@@ -167,7 +166,7 @@ if (!String.prototype.format) {
 				$(el).remove();
 				last.addClass('active');
 			}
-		})
+		});
 
 		this.config.index--;
 
@@ -192,23 +191,26 @@ if (!String.prototype.format) {
 
 	Template.prototype.applyTagFilters = function(context, filter){
 		var c = {};
-		if(context){
+		if(context)
+		{
 			Merkin.extend(c, context);			
 		}
 		var r = []; 
-		if(c.tags && c.tags.length >  0){;
+		if(c.tags && c.tags.length >  0)
+		{
 			var filtered = Merkin.map(function(el, idx){
 				return Merkin.actionFilter(el, filter);
 			}, context.tags);
 			context.html = filtered.join("");
 		}
 		return context.html;
-	}
+	};
 
 	function Controls(options){
 		this.options = {};
 		Merkin.extend(this.options, options);
 	}
+	
 	Controls.prototype.remove = function() {
 		var ctrl = "." + this.options.class;
 		$(this.options.parent).find('.active').remove();
@@ -246,4 +248,4 @@ if (!String.prototype.format) {
 	Merkin.Macro = Macro;
 
 	w.Merkin = Merkin;
-})(window)
+})(window);
