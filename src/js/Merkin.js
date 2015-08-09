@@ -47,15 +47,54 @@ if (!String.prototype.format) {
 		}
 	};
 
-	Merkin.prototype.createMacro = function(macro, thing){
-		if(!macro) throw new TypeError();
-		// if(!thing) throw new TypeError();				
+	function ajax(options){
+		
+		if(!options || !options.url || typeof options !== 'string'){
+			throw "no url provided";
+		}
 
-		return function(m){
-			if(m === macro && typeof thing === 'function') return thing();			
-			if(m === macro) return thing;
-		};
-	};
+		var supportsJSON = (function() {
+		    if (typeof XMLHttpRequest == 'undefined') {
+		        return false;
+		    }
+		    var xhr = new XMLHttpRequest();
+		    xhr.open('get', '/', true);
+		    try {
+		        // some browsers throw when setting `responseType` to an unsupported value
+		        xhr.responseType = 'json';
+		    } catch(error) {
+		        return false;
+		    }
+		    return 'response' in xhr && xhr.responseType == 'json';
+		}());
+
+		return new Promise(function(resolve, reject) {
+
+			var xhr = typeof XMLHttpRequest != 'undefined'
+			? new XMLHttpRequest()
+			: new ActiveXObject('Microsoft.XMLHTTP');
+			
+			var responseTypeAware = 'responseType' in xhr;
+			var url = (typeof options === 'string') ? options : options.url
+			
+			xhr.open('get', url, !!resolve);
+			
+			supportsJSON && xhr.responseType = 'json';
+
+			xhr.onload = function() {
+		  		var status = xhr.status;
+		  
+		  		if (status == 200) {
+		    		resolve(xhr.response);
+		  		} 
+		  		else {
+				    reject(status);
+				}
+			};
+
+			xhr.send();
+		});
+	}
 
 	function Macro(macro, thing){
 		if(!macro) throw new TypeError("you need to defined a macro");
