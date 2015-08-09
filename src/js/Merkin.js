@@ -47,54 +47,69 @@ if (!String.prototype.format) {
 		}
 	};
 
-	function ajax(options){
-		
-		if(!options || !options.url || typeof options !== 'string'){
-			throw "no url provided";
-		}
+	var Resource = (function (window, document) {
 
-		var supportsJSON = (function() {
-		    if (typeof XMLHttpRequest == 'undefined') {
-		        return false;
-		    }
-		    var xhr = new XMLHttpRequest();
-		    xhr.open('get', '/', true);
-		    try {
-		        // some browsers throw when setting `responseType` to an unsupported value
-		        xhr.responseType = 'json';
-		    } catch(error) {
-		        return false;
-		    }
-		    return 'response' in xhr && xhr.responseType == 'json';
-		}());
+	    return function (el) {
+	        this.options = el;
+	        this.get = get;
 
-		return new Promise(function(resolve, reject) {
+	        if (this === window) {
+	            return new resource(el);
+	        }
+	    };
 
-			var xhr = typeof XMLHttpRequest != 'undefined'
-			? new XMLHttpRequest()
-			: new ActiveXObject('Microsoft.XMLHTTP');
-			
-			var responseTypeAware = 'responseType' in xhr;
-			var url = (typeof options === 'string') ? options : options.url
-			
-			xhr.open('get', url, !!resolve);
-			
-			supportsJSON && xhr.responseType = 'json';
+	    function get(options) {
+	        this.options = Merkin.extend(this.options, options);
 
-			xhr.onload = function() {
-		  		var status = xhr.status;
-		  
-		  		if (status == 200) {
-		    		resolve(xhr.response);
-		  		} 
-		  		else {
-				    reject(status);
-				}
-			};
+	        var supportsJSON = (function () {
+	            if (typeof XMLHttpRequest == 'undefined') {
+	                return false;
+	            }
+	            var xhr = new XMLHttpRequest();
+	            xhr.open('get', '/', true);
+	            try {
+	                // some browsers throw when setting `responseType` to an unsupported value
+	                xhr.responseType = 'json';
+	            } catch (error) {
+	                return false;
+	            }
+	            return 'response' in xhr && xhr.responseType == 'json';
+	        }());
 
-			xhr.send();
-		});
+	        return new Promise(function (resolve, reject) {
+
+	            var xhr = typeof XMLHttpRequest != 'undefined' ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+
+	            var responseTypeAware = 'responseType' in xhr;
+	            var url = (typeof options === 'string') ? options : this.options.url;
+
+	            xhr.open('get', this.options.url, !! resolve);
+	            supportsJSON && (xhr.responseType = this.options.type || 'json');
+
+	            xhr.onload = function () {
+	                var status = xhr.status;
+
+	                if (status == 200) {
+	                    resolve(xhr.response);
+	                } else {
+	                    reject(status);
+	                }
+	            };
+
+	            xhr.send();
+	        });
+	    }
+	})(this, document);
+
+	Resource.prototype = {
+	    get: function (options) {
+	        return this.get(options);
+	    },
+	    put: function () {},
+	    post: function () {},
+	    delete: function () {}
 	}
+
 
 	function Macro(macro, thing){
 		if(!macro) throw new TypeError("you need to defined a macro");
@@ -285,6 +300,6 @@ if (!String.prototype.format) {
 	Merkin.Control = Controls;
 	Merkin.Ensure = Ensure;
 	Merkin.Macro = Macro;
-
+	Merkin.Resource = Resource;
 	w.Merkin = Merkin;
 })(window);
